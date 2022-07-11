@@ -1,69 +1,120 @@
-#include <cstddef>
 #include <iostream>
-#include <sstream>
 #include "heapbuilder.h"
 #include "treebuilder.h"
-Node::Node(char letter, int freq) 
+
+INode::INode()
 {
-    this->letter = letter;
-    this->freq = freq;
-    this->left = NULL;
-    this->right = NULL;
+    this->freq = 0;
+    this->left = nullptr;
+    this->right = nullptr;
 }
 
-int Node::sum() 
+INode::INode(int freq)
+{
+    this->freq = freq;
+    this->left = nullptr;
+    this->right = nullptr;
+}
+
+int INode::sum()
 {
     int out = this->freq;
     if (this->left)
-        out += this->left->sum();
+        out += this->left->freq;
     if (this->right)
-        out += this->right->sum();
+        out += this->right->freq;
     return out;
 }
 
-char Node::getLetter() 
+bool INode::hasLetter()
 {
-    return this->letter;
+    return false;
 }
 
-int Node::getFreq() 
-{
-    return this->freq;
-}
-
-bool Node::operator>(Node other)
-{
-    return this->freq > other.freq;
-}
-
-bool Node::operator<(Node other)
+bool INode::operator<(INode other)
 {
     return this->freq < other.freq;
 }
 
-bool Node::operator==(Node other)
+bool INode::operator>(INode other)
 {
-    return this->letter == other.letter &&
-        this->freq == other.freq;
+    return this->freq > other.freq;
 }
 
-Node huffTreeGen(Heap & heap)
+bool INode::operator==(INode other)
+{
+    return this->freq == other.freq;
+}
+
+Node::Node(char letter, int freq) 
+{
+    this->letter = letter;
+}
+
+bool Node::hasLetter()
+{
+    return true;
+}
+
+bool Node::operator>(INode other)
+{
+    return this->freq > other.freq && other.hasLetter();
+}
+
+bool Node::operator<(INode other)
+{
+    return this->freq < other.freq && other.hasLetter();
+}
+
+bool Node::operator==(INode other)
+{
+    if (other.hasLetter())
+        return this->freq = other.freq;
+    return false;
+}
+
+IntNode::IntNode(int freq)
+{
+    this->freq = freq;
+}
+
+bool IntNode::hasLetter()
+{
+    return false;
+}
+
+bool IntNode::operator>(INode other)
+{
+    return this->freq > other.freq && !other.hasLetter();
+}
+
+bool IntNode::operator<(INode other)
+{
+    return this->freq < other.freq && !other.hasLetter();
+}
+
+bool IntNode::operator==(INode other)
+{
+    return this->freq == other.freq && !other.hasLetter();
+}
+
+INode huffTreeGen(Heap & heap)
 {
     if (heap.size() == 1) 
         return heap.remove();
-    Node l = heap.remove();
-    Node r = heap.remove();
-    Node i = Node('\0', l.getFreq() + r.getFreq());
+    INode l = heap.remove();
+    INode r = heap.remove();
+    INode i = IntNode(l.freq + r.freq);
     i.left = &l;
     i.right = &r;
     heap.insert(i);
     return huffTreeGen(heap);
 }
 
-bool find(Node* huff, char element)
+/*bool find(INode* huff, char element)
 {
     if (!huff->left && !huff->right)
-        return huff->getLetter() == element;
+        return huff->letter == element;
     if (huff->left) 
     {
         bool found = find(huff->left, element);
@@ -72,47 +123,45 @@ bool find(Node* huff, char element)
         return found;
     }
     return find(huff->right, element);
-}
+}*/
 
-string huffCode(Node* huff, string str)
+vector<string> huffCodes(INode* huff, string str)
 {
-    string out = "";
+    vector<string> out = vector<string>();
     if (!huff)
         return out;
-    if (huff->getLetter() != '\0') {
-        out += (huff->getLetter() + ":" + str + '\0');
-        return out;
+    if (huff->hasLetter()) 
+    {
+        Node* temp = dynamic_cast<Node*>(huff);
+        if (temp) {
+            out.push_back(temp->letter + ":" + str);
+            return out;
+        }
+        throw 1;
     }
-    out += huffCode(huff->left, str+"0");
-    out += huffCode(huff->right, str+"1");
+    vector<string> left = huffCodes(huff->left, str+"0");
+    out.reserve(out.size() + left.size());
+    out.insert(out.end(), out.begin(), out.end());
+    out.insert(out.end(), left.begin(), left.end());
+    vector<string> right = huffCodes(huff->right, str+"1");
+    out.reserve(out.size() + right.size());
+    out.insert(out.end(), out.begin(), out.end());
+    out.insert(out.end(), right.begin(), right.end());
     return out;
 }
 
-vector<string> huffCodes(Node* huff)
+vector<string> huffCodes(INode* huff)
 {
-    //string split from
-    //https://stackoverflow.com/questions/14265581/parse-split-a-string-in-c-using-string-delimiter-standard-c/14266139#14266139
-    vector<string> out;
-    cout << "Begin code string generation" << endl;
-    string codes = huffCode(huff, "");
-    cout << "Code string generation complete" << endl;
-    string curLine;
-    stringstream ss(codes);
-    int cnt = 0;
-    while (getline(ss, curLine, '\0'))
-        out.push_back(curLine);
-    cout << "Code count: " << out.size() << endl;
-    return out;
+    return huffCodes(huff, "");
 }
 
 vector<string> codes(vector<char> & alphabet, vector<int> & frequencies) 
 {
-    vector<Node> nodes;
+    vector<INode> nodes;
     for (int i = 0; i < alphabet.size(); i++) 
         nodes.push_back(Node(alphabet[i], frequencies[i]));
     Heap h = Heap(nodes);
-    Node huffTree = huffTreeGen(h);
+    INode huffTree = huffTreeGen(h);
     vector<string> output = huffCodes(&huffTree);
-    cout << "Code generation complete" << endl;
     return output;
 }

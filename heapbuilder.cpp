@@ -1,33 +1,33 @@
 #include "heapbuilder.h"
 Heap::Heap()
 {
-    heap = vector<Node>();
+    heap = vector<INode>();
 }
 
-Heap::Heap(vector<Node> & nodes)
+Heap::Heap(vector<INode> & nodes)
 {
     heap = nodes;
     for (int i = heap.size() - 1; i >= 0; i--)
         percolateDown(i);
 }
 
-void Heap::insert(Node node)
+void Heap::insert(INode node)
 {
     heap.push_back(node);
     percolateUp(heap.size() - 1);
 }
 
-Node Heap::peek()
+INode Heap::peek()
 {
     if (!heap.size())
-        return Node('\0', -1);
+        return IntNode(-1);
     return heap[0];
 }
 
-Node Heap::remove()
+INode Heap::remove()
 {
     if (!heap.size())
-        return Node('\0', -1);
+        return IntNode(-1);
     return deleteIndex(0);
 }
 
@@ -38,12 +38,12 @@ int Heap::size()
 
 void Heap::clear()
 {
-    heap = vector<Node>();
+    heap = vector<INode>();
 }
 
 void Heap::swap(int from, int to)
 {
-    Node temp = heap[from];
+    INode temp = heap[from];
     heap[from] = heap[to];
     heap[to] = temp;
 }
@@ -100,21 +100,15 @@ void Heap::percolateDown(int index)
     percolateDown(nextPD);
 }
 
-Node Heap::deleteIndex(int index)
+INode Heap::deleteIndex(int index)
 {
     if (index == heap.size()-1) 
     {
-        /*Node* output = &heap[index];
-        vector<Node>::iterator t;
-        t = heap.begin();
-        for (int i = 0; i <= index; i++)
-            t++;
-        heap.erase(t);*/
-        Node output = heap[heap.size() - 1];
+        INode output = heap[heap.size() - 1];
         heap.pop_back();
         return output;
     }
-    Node output = heap[index];
+    INode output = heap[index];
     heap[index] = heap[heap.size() - 1];
     heap.pop_back();
     if (output > heap[index])

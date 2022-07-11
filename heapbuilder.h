@@ -5,14 +5,14 @@ class Heap
 {
     public:
         Heap();
-        Heap(vector<Node> & nodes);
-        Node peek();
-        Node remove();
-        void insert(Node node);
+        Heap(vector<INode> & nodes);
+        INode peek();
+        INode remove();
+        void insert(INode node);
         int size();
         void clear();
     private:
-        vector<Node> heap;
+        vector<INode> heap;
         void swap(int from, int to);
         int getParentI(int index);
         int getLChildI(int index);
@@ -20,6 +20,6 @@ class Heap
         int getMinChildI(int index);
         void percolateUp(int index);
         void percolateDown(int index);
-        Node deleteIndex(int index);
+        INode deleteIndex(int index);
 };
 #endif

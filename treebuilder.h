@@ -4,21 +4,43 @@
 #include <string>
 #include <cstring>
 using namespace std;
-class Node 
+
+class INode
 {
     public:
-        Node* left;
-        Node* right;
-        Node(char letter, int freq);
+        INode* left;
+        INode* right;
+        INode();
+        INode(int freq);
+        bool hasLetter();
         int sum();
-        char getLetter();
-        int getFreq();
-        bool operator>(Node other);
-        bool operator<(Node other);
-        bool operator==(Node other);
-    private:
-        char letter;
+        bool operator>(INode other);
+        bool operator<(INode other);
+        bool operator==(INode other);
         int freq;
+        virtual ~INode(){};
+};
+
+class Node : public INode
+{
+    using INode::INode;
+    public:
+        Node(char letter, int freq);
+        bool hasLetter();
+        bool operator>(INode other);
+        bool operator<(INode other);
+        bool operator==(INode other);
+        char letter;
+};
+
+class IntNode : public INode {
+    using INode::INode;
+    public:
+        IntNode(int freq);
+        bool hasLetter();
+        bool operator>(INode other);
+        bool operator<(INode other);
+        bool operator==(INode other);
 };
 vector<string> codes(vector<char> & alphabet, vector<int> & frequencies);
 #endif

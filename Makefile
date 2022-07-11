@@ -8,6 +8,7 @@ clean:
 	rm scale
 
 test: scale
+	make
 	echo "Testing Program"
 	./scale test/testfile.txt
 	echo "Cleaning"
