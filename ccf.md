@@ -6,7 +6,7 @@ The next 8 bits contain the number of Huffman keys, minus one. This is becuase t
 ## LUT section
 The next segment contains a lookup table containing each key, as well as other data necessary to tokenize and decode it. The Huffman key is padded because it is rarely exactly a multiple of 8 bits long. The value used to pad is `0`.<br><br>
 Each row of the lookup table looks like this:
-|`Character` | `Size of padded Huffman key` | `Number of padded bits`| `Huffman key, padded to modulo 8 bits`
+|Character | Size of padded Huffman key | Number of padded bits| Huffman key, padded to modulo 8 bits
 |:---|:---|:---|:---|
 
 ## Signature 2
