@@ -1,7 +1,9 @@
 #include <iostream>
 #include <fstream>
+#include <cstdio>
 #include "encrypt.h"
 #include "treebuilder.h"
+#include <memory>
 
 /*
 CAUV (Check And Update Vectors) updates the
@@ -56,31 +58,31 @@ encrypt(string pn)
     }
     vector<char> alphabet;
     vector<int> frequency;
-    string thetext;
-    while (getline(readfile, curLine))
+    //1GB buffer
+    const streamsize BUFSZ = 1024 * 1024 * 1024;
+    char* buf = new char[BUFSZ];
+    int bufcnt = 0;
+    int gc;
+    do
     {
-        thetext += curLine;
-        thetext += "\n";
-        for (int i = 0; i < curLine.size(); i++)
-            cauv(alphabet, frequency, curLine[i]);
-        //every file should end with a newline anyway
-        cauv(alphabet, frequency, '\n');
+        readfile.read(buf, BUFSZ);
+        gc = readfile.gcount();
+        if (gc <= 0)
+            break;
+        for (int i = 0; i < gc; i++)
+            cauv(alphabet, frequency, *(buf + i));
+        bufcnt++;
     }
+    while (readfile);
+    delete[] buf;
     readfile.close();
-    cout << "Size: " << alphabet.size() << endl;
     vector<string>* hc = sasc(codes(alphabet, frequency));
-    cout << "List of characters and their codes" << endl;
     vector<char> alph;
     vector<string> code;
     for (int i = 0; i < hc->size(); i += 2)
     {
         alph.push_back(hc->at(i)[0]);
         code.push_back(hc->at(i+1));
-        if (hc->at(i) == "\n")
-            cout << "Newline: " << hc->at(i+1) << endl;
-        else
-        {
-            cout << hc->at(i) << ": " << hc->at(i+1) << endl;
-        }
     }
+    return 0;
 }
