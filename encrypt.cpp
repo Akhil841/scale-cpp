@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include "encrypt.h"
 #include "treebuilder.h"
 
 /*
@@ -43,15 +44,11 @@ sasc(vector<string>* strings)
     return out;
 }
 
-int
-main(int argc, char** argv)
+int 
+encrypt(string pn)
 {
-    if (argc == 1) {
-        cout << "no input file\nending" << endl;
-        return 1;
-    }
     string curLine;
-    ifstream readfile(*(argv + 1));
+    ifstream readfile(pn);
     if (!readfile)
     {
         cout << "Invalid file or directory\nending" << endl;
@@ -77,50 +74,13 @@ main(int argc, char** argv)
     vector<string> code;
     for (int i = 0; i < hc->size(); i += 2)
     {
+        alph.push_back(hc->at(i)[0]);
+        code.push_back(hc->at(i+1));
         if (hc->at(i) == "\n")
             cout << "Newline: " << hc->at(i+1) << endl;
         else
         {
             cout << hc->at(i) << ": " << hc->at(i+1) << endl;
-            alph.push_back(hc->at(i)[0]);
-            code.push_back(hc->at(i+1));
         }
     }
-    cout << "Original: " << thetext.length() * 8 << " bytes" << endl;
-    string compressed = "";
-    for (int i = 0; i < thetext.length(); i++)
-    {
-        for (int j = 0; j < alph.size(); j++)
-        {
-            if (alph[j] == thetext[i])
-            {
-                compressed += code[j];
-                break;
-            }
-        }
-    }
-    cout << "Compressed: " << compressed.length() << " bytes" << endl;
-    string decompressed = "";
-    string cur = "";
-    for (int i = 0; i < compressed.size(); i++)
-    {
-        cur += string(1, compressed[i]);
-        for (int j = 0; j < code.size(); j++)
-        {
-            if (cur == code[j])
-            {
-                decompressed += alph[j];
-                cur = "";
-            }
-        }
-    }
-    cout << "Decompressed: " << decompressed.length() * 8 << " bytes" << endl;
-    if (thetext == decompressed)
-        cout << "IT WORKS!" << endl;
-    else
-        cout << "Got some work to do" << endl;
-    cout << thetext << endl;
-    cout << compressed << endl;
-    cout << decompressed << endl;
-    return 0;
 }

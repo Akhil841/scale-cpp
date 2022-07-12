@@ -1,5 +1,5 @@
-all: main.cpp treebuilder.cpp heapbuilder.cpp
-	g++ -o scale main.cpp treebuilder.cpp heapbuilder.cpp
+all: main.cpp encrypt.cpp treebuilder.cpp
+	g++ -o scale main.cpp encrypt.cpp treebuilder.cpp
 
 scale:
 	make
@@ -10,6 +10,9 @@ clean:
 test: scale
 	make
 	echo "Testing Program"
-	./scale test/testfile.txt
+	cd test
+	./scale testfile.txt >> output.txt
+	diff expected.txt output.txt
+	echo "Difference (If you see nothing then it works!)"
 	echo "Cleaning"
 	make clean
