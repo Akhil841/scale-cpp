@@ -11,9 +11,4 @@ clean:
 test: scale
 	make
 	echo "Testing Program"
-	cd test
-	./scale testfile.txt >> output.txt
-	diff expected.txt output.txt
-	echo "Difference (If you see nothing then it works!)"
-	echo "Cleaning"
-	make clean
+	./scale -e test/testfile.txt 

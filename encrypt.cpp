@@ -112,7 +112,6 @@ encrypt(string pn)
         alph.push_back(hc->at(i)[0]);
         code.push_back(hc->at(i+1));
     }
-
     //code generation/storage complete
     //time to write encrypted file
 
@@ -129,7 +128,7 @@ encrypt(string pn)
     //do not write null character
     ofile << 'S' << 'C' << 'A' << 'L' << 'E';
     //write number of huffman keys minus 1
-    char hkeys = code.size() - 1;
+    unsigned char hkeys = code.size() - 1;
     ofile << hkeys;
     //write all keys as follows:
     //1. The character
@@ -240,9 +239,10 @@ encrypt(string pn)
         nextchar = rotr(nextchar, 7 - thiso);
         //join last character of current partition and first character of next
         //partition with bitwise or
-        *(bsparts[i]->bs + (bsparts[i]->size - 1)) |= nextchar;
+        *(bsparts[i]->bs + (bsparts[i]->size - 8)/8) |= nextchar;
+        //CODE SEGFAULTS HERE FOR LARGE FILES
         //shift next partition by this partition's offset
-        sftcabyn(bsparts[i + 1]->bs, bsparts[i + 1]->size, thiso);
+        sftcabyn(bsparts[i + 1]->bs, bsparts[i + 1]->size/8, thiso);
         //increase next partition's offset by thiso
         bsparts[i + 1]->offset += thiso;
         //decrease next partition's size by floor(nexto/8) * 8
