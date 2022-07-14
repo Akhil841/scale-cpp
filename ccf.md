@@ -12,6 +12,12 @@ Each row of the lookup table looks like this:
 ## Signature 2
 The next 40 bits of the file are always `CDATA`. This is short for "compressed data", and like the first signature, a SCALE codec checks this to ensure that the input file is a valid `.sca` file. The presence of two signatures coupled with a varying number of bits between them ensures that it is very unlikely for an invalid `.sca` file to make it past this stage.
 
+## Data size
+The next 64 bits of data contain the number of bytes that the compressed data takes up.
+
+## Data pad
+The next 8 bits of data contain the number of 0s that the data is padded with to fit in bytes.
+
 ## Data section
 
 The data section contains all the compressed data, without delimiters to optimize compression. The file is padded with `0`s to contain modulo 8 bits.

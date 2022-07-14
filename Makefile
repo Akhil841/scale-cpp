@@ -1,11 +1,12 @@
-all: main.cpp encrypt.cpp treebuilder.cpp
-	g++ -o scale main.cpp encrypt.cpp treebuilder.cpp
+all: main.cpp encrypt.cpp treebuilder.cpp codemaker.cpp
+	g++ -o scale main.cpp encrypt.cpp treebuilder.cpp codemaker.cpp
 
 scale:
 	make
 
 clean:
-	rm scale
+	rm -f scale
+	rm -f *.sca
 
 test: scale
 	make

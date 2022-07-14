@@ -1,9 +1,11 @@
 #include <iostream>
 #include <fstream>
 #include <cstdio>
+#include <memory>
+#include <ctime>
 #include "encrypt.h"
 #include "treebuilder.h"
-#include <memory>
+#include "codemaker.h"
 
 /*
 CAUV (Check And Update Vectors) updates the
@@ -46,43 +48,221 @@ sasc(vector<string>* strings)
     return out;
 }
 
+class partbs
+{
+    public:
+        char* bs;
+        int size;
+        unsigned char offset;
+        partbs(char* bs, int size, unsigned char offset);
+};
+
+partbs::partbs(char* bs, int size, unsigned char offset)
+{
+    this->bs = bs;
+    this->size = size;
+    this->offset = offset;
+}
+
 int 
 encrypt(string pn)
 {
-    string curLine;
+    //read input file
     ifstream readfile(pn);
+    //handle invalid file
     if (!readfile)
     {
         cout << "Invalid file or directory\nending" << endl;
         return 1;
     }
+    //store list of characters and frequencies here
     vector<char> alphabet;
     vector<int> frequency;
-    //1GB buffer
-    const streamsize BUFSZ = 1024 * 1024 * 1024;
+    //create 1MB buffer for reading file
+    //1MB buffer allows for quick enough reading of small and large files alike
+    const streamsize BUFSZ = 1024 * 1024;
     char* buf = new char[BUFSZ];
-    int bufcnt = 0;
-    int gc;
+    //read the entire file
     do
     {
+        //write current buffer
         readfile.read(buf, BUFSZ);
-        gc = readfile.gcount();
-        if (gc <= 0)
+        //store #chars read
+        int gc;
+        //end if nothing read
+        if ((gc = readfile.gcount()) <= 0)
             break;
+        //update alphabet and frequency with
+        //all characters in the buffer
         for (int i = 0; i < gc; i++)
             cauv(alphabet, frequency, *(buf + i));
-        bufcnt++;
     }
     while (readfile);
+    //free the buffer (it's huge lol)
     delete[] buf;
-    readfile.close();
+    //generate huffman codes
     vector<string>* hc = sasc(codes(alphabet, frequency));
+    //store character and code lists here
+    //(they are aligned)
     vector<char> alph;
     vector<string> code;
+    //generate map of characters and codes
     for (int i = 0; i < hc->size(); i += 2)
     {
         alph.push_back(hc->at(i)[0]);
         code.push_back(hc->at(i+1));
     }
+
+    //code generation/storage complete
+    //time to write encrypted file
+
+    //generate compressed filename
+    //compressedfile_YEAR-MONTH-DAY-HH:MM:SS.sca
+    time_t now = time(0);
+    tm *ltm = localtime(&now);
+    string name = "compressedfile_" + to_string(1900 + ltm->tm_year) + "-";
+    name += to_string(1 + ltm->tm_mon) + "-" + to_string(ltm->tm_mday) + "-";
+    name += to_string(ltm->tm_hour) + ":" + to_string(ltm->tm_min) + ":";
+    name += to_string(ltm->tm_sec) + ".sca";
+    ofstream ofile(name);
+    //write SCALE signature
+    //do not write null character
+    ofile << 'S' << 'C' << 'A' << 'L' << 'E';
+    //write number of huffman keys minus 1
+    char hkeys = code.size() - 1;
+    ofile << hkeys;
+    //write all keys as follows:
+    //1. The character
+    //2. The size of the padded key, in bits
+    //3. The number of padded bits added
+    //4. The huffman key, padded to 8 bits
+    for (int i = 0; i < hkeys + 1; i++)
+    {
+        char curAlph = alph[i];
+        string curCode = code[i];
+        //1. The character
+        ofile << curAlph;
+        char size = 0;
+        char offset = 0;
+        char* ca = bstoca(curCode, &size, &offset);
+        //2. The size of the padded key in bits
+        ofile << size;
+        //3. The number of padded bits added
+        ofile << offset;
+        //4. The huffman key, padded to 8 bits
+        for (int i = 0; i < size/8; i++)
+            ofile << *(ca + i);
+    }
+    //write CDATA signature
+    //do not write null character
+    ofile << 'C'<< 'D' << 'A' << 'T' << 'A';
+    //reset file reader
+    readfile.clear();
+    readfile.seekg(0);
+    //store compressed size
+    unsigned long cfsz = 0;
+    //reallocate 1MB buffer
+    buf = new char[BUFSZ];
+    //get each bit string
+    //store them in a vector<string> to prevent process
+    //from getting killed
+    vector<string> partitions;
+    do
+    {
+        //read buffer
+        readfile.read(buf, BUFSZ);
+        //get #chars read
+        int gc = readfile.gcount();
+        //break if nothing read because this implies EOF
+        if (gc <= 0)
+            break;
+        //store compressed bitstring here
+        string cbs = "";
+        for (int i = 0; i < gc; i++)
+        {
+            //store current character for readability
+            char cc = *(buf + i);
+            //write corresponding huffman code to string
+            for (int j = 0; j < code.size(); j++)
+            {
+                if (cc == alph[j])
+                {
+                    cbs += code[j];
+                    continue;
+                }
+            }
+        }
+        //write full compressed string to vector
+        partitions.push_back(cbs);
+        //add cbs size to total compressed size
+        cfsz += cbs.size();
+    }
+    while(readfile);
+    //close the file
+    readfile.close();
+    //delete buffer
+    delete[] buf;
+    //write total compressed size to file
+    cfsz += (8 - (cfsz % 8)) % 8;
+    char* cfszbit = ultoca(cfsz/8);
+    for (int i = 0; i < 8; i++)
+        ofile << *(cfszbit + i);
+    delete[] cfszbit;
+    //TODO
+
+    //store partition bitstrings in vector
+    vector<partbs*> bsparts;
+    //write each partition to the compressed file
+    for (int i = 0; i < partitions.size(); i++)
+    {
+        //for partbs
+        unsigned char ofs;
+        int sz;
+        //calculate bitstring
+        char* bstr = bstoca(partitions[i], &sz, &ofs);
+        //store bitstring and its size in a partbs object
+        partbs* cur = new partbs(bstr, sz, ofs);
+        //add the object to the vector
+        bsparts.push_back(cur);
+    }
+    //shift all partition bitstrings
+    for (int i = 0; i < bsparts.size() - 1; i++)
+    {
+        //get this partition's offset
+        unsigned char thiso = bsparts[i]->offset;
+        //if N is the offset, get the first N characters of the next partition
+        char bitmask = 0;
+        for (int i = 0; i < thiso; i++)
+            bitmask |= (1 << (7 - i));
+        //bitmask is now N 1s and (8-N) 0s
+        char nextchar = *(bsparts[i + 1]->bs) & bitmask;
+        //rotate next by offset
+        nextchar = rotr(nextchar, 7 - thiso);
+        //join last character of current partition and first character of next
+        //partition with bitwise or
+        *(bsparts[i]->bs + (bsparts[i]->size - 1)) |= nextchar;
+        //shift next partition by this partition's offset
+        sftcabyn(bsparts[i + 1]->bs, bsparts[i + 1]->size, thiso);
+        //increase next partition's offset by thiso
+        bsparts[i + 1]->offset += thiso;
+        //decrease next partition's size by floor(nexto/8) * 8
+        bsparts[i + 1]->size -= ((bsparts[i + 1]->offset)/8)*8;
+        //subtract thiso from next partition offset
+        bsparts[i + 1]->offset -= thiso;
+    }
+    //write data pad size
+    ofile << bsparts[bsparts.size() - 1]->offset;
+    //write all partitions
+    for (int i = 0; i < bsparts.size(); i++)
+    {
+        partbs* cur = bsparts[i];
+        for (int i = 0; i < (cur->size)/8; i++)
+            ofile << *(cur->bs + i);
+        delete[] cur->bs;
+        delete cur;
+    }
+    //close ofile
+    ofile.close();
+    //finish
     return 0;
 }
