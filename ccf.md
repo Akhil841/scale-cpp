@@ -1,23 +1,15 @@
 # Contents of a `.sca` File
-## Signature 1
-The first 40 bits of a `.sca` file are always `SCALE`. A SCALE codec checks this to ensure that the input file is a valid `.sca` file.
-## Key count
-The next 8 bits contain the number of Huffman keys, minus one. This is becuase there are 256 ASCII characters (thus, up to 256 keys) and in 8 bits, we can store any value between 0 and 255. 
-## LUT section
-The next segment contains a lookup table containing each key, as well as other data necessary to tokenize and decode it. The Huffman key is padded because it is rarely exactly a multiple of 8 bits long. The value used to pad is `0`.<br><br>
-Each row of the lookup table looks like this:
-|Character | Size of padded Huffman key | Number of padded bits| Huffman key, padded to modulo 8 bits
-|:---|:---|:---|:---|
+## Preorder traversal of the Huffman tree
+The first 10(2n-1) bits, where *n* is the number of unique characters in the uncompressed file, of a `.sca` file contain a preorder traversal of the Huffman tree used to encode the file. 
 
-## Signature 2
-The next 40 bits of the file are always `CDATA`. This is short for "compressed data", and like the first signature, a SCALE codec checks this to ensure that the input file is a valid `.sca` file. The presence of two signatures coupled with a varying number of bits between them ensures that it is very unlikely for an invalid `.sca` file to make it past this stage.
-
-## Data size
-The next 64 bits of data contain the number of bytes that the compressed data takes up.
+## 11 signature
+The next 2 bits are always `11`, which can be used as a method to verify file integrity.
 
 ## Data pad
-The next 8 bits of data contain the number of 0s that the data is padded with to fit in bytes.
+The next 8 - n bits of data contain a padding to make the data structured as bytes again.
+
+## Uncompressed file size
+The next 64 bits of data contain the number of bytes that the uncompressed data takes up.
 
 ## Data section
-
-The data section contains all the compressed data, without delimiters to optimize compression. The file is padded with `0`s to contain modulo 8 bits.
+The data section contains all the compressed data, Huffman encoded. The file is padded with `0`s to contain modulo 8 bits.

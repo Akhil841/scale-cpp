@@ -1,33 +1,28 @@
-#include <iostream>
+#include "util.h"
+#include "treelib.h"
 #include "encrypt.h"
+#include "decrypt.h"
 
-int
-main(int argc, char** argv)
+int main(int argc, char** argv)
 {
-    if (argc < 3) 
-    {
-        cout << "Not enough arguments" << endl;
-        cout << "Format: " << endl;
-        cout << "./scale <-e | -d> <filename/filedir>" << endl;
-        cout << "Ending" << endl;
-        return 1;
-    }
-    if (string(*(argv + 1)) == "-e")
-    {
-        string filename = string(*(argv + 2));
-        return encrypt(filename);
-    }
-    if (string(*(argv + 1)) == "-d")
-    {
-
-    }
+    //argument checking
+    if (argc != 4)
+        error("Input must have 3 arguments");
+    //input file stream
+    IStreamWrapper in(*(argv + 2));
+    //output file stream
+    OStreamWrapper out(*(argv + 3));
+    //compress/decompress
+    std::string option = std::string(*(argv + 1));
+    //check file integrity
+    if (!in.good())
+        error("Bad input file");
+    //encrypt or decrypt based on input
+    if (option == "-c")
+        encrypt(in, out);
+    else if (option == "-d")
+        decrypt(in, out);
     else
-    {
-        cout << "Invalid option" << endl;
-        cout << "Use the -e flag to encrypt a file";
-        cout << " and the -d flag to decrypt one" << endl;
-        cout << "Ending" << endl;
-        return 1;
-    }
+        error("Bad option");
     return 0;
 }
