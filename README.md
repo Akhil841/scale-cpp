@@ -1,6 +1,6 @@
 # scale-cpp
 ## Introduction
-SCALE (Simple Compression Algorithm that's Lossless and sometimes Efficient) is a file format based on Huffman encryption. For details on what a `.sca` file entails, see [the documentation](./ccf.md).
+SCALE (Simple Compression Algorithm that's Lossless and sometimes Efficient) is a file format based on Huffman encryption. For details on what a compressed file entails, see [the documentation](./ccf.md).
 
 This repository also contains a SCALE codec as per the specifications, written in C++.
 
