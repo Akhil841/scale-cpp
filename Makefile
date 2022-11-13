@@ -17,7 +17,7 @@ gb: gigatest.cpp
 
 gigatest: scale
 	make
-	./giga
+	make gb
 	echo "Testing binary gigabyte"
 	./scale -c test/gigatest.bin out/gigatest.sca
 	./scale -d out/gigatest.sca out/gigatest.dcs
