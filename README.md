@@ -25,3 +25,7 @@ The syntax for using SCALE is as follows:
 `./scale <-c|-d> <input_file> <output_file>`
 
 Using the `-c` flag compresses `input_file` and writes it into `output_file`, and the `-d` flag decompressses `input_file` and writes it to `output_file`.
+
+## Theoretical and practical limits
+
+Because SCALE stores data such as filesize as an unsigned 64-bit integer, it is theoretically capable of operating on up to files of up to 16 EiB in size. In practice, given that the program is run in a single thread and the hardware limitations of today, it should probably not be used for files larger than 50 MiB. (I tried compressing a 1 GiB file on my laptop with this program, and it took nearly an hour.). This program was made merely for practice with C++ and implementing Huffman coding. If you actually want efficient, fast compression, use [7zip](https://www.7-zip.org/)!

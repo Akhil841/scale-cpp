@@ -1,6 +1,6 @@
 # Contents of a Compressed File
 ## Preorder traversal of the Huffman tree
-The first 10(2n-1) bits, where *n* is the number of unique characters in the uncompressed file, of a `.sca` file contain a preorder traversal of the Huffman tree used to encode the file. 
+The first 10(2n-1) bits, where *n* is the number of unique characters in the uncompressed file, contain a preorder traversal of the Huffman tree used to encode the file. 
 
 ## 11 signature
 The next 2 bits are always `11`, which can be used as a method to verify file integrity.

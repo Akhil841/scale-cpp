@@ -10,6 +10,8 @@ clear:
 clean:
 	rm -f scale
 	rm -rf out/*
+
+gigaclean:
 	rm test/gigabin.bin
 
 gb: gigatest.cpp
@@ -24,6 +26,7 @@ gigatest: scale
 	echo "Binary gigabyte diff below:"
 	diff test/gigatest.bin out/gigatest.dcs
 	make clean
+	make gigaclean
 
 test: scale
 	make
